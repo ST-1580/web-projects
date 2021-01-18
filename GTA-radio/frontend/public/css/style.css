@@ -1,0 +1,77 @@
+@font-face {
+    font-family: Placard Next;
+    src: url("../fonts/PlacardNextCnMed.ttf");
+}
+
+:root {
+    font-size: 2vmin;
+    font-family: Placard Next, serif;
+    cursor: default;
+
+    --R-small: calc((100vmin - 2 * (var(--station-block-size) + var(--station-border-size))) / 2);
+    --R-big: calc((100vmin - 2 * var(--station-border-size)) / 2);
+
+    --classic-border: var(--station-border-size) rgba(0, 0, 0, 0) solid;
+    --classic-opacity: 40%;
+    --classic-z-index: 10;
+
+    --modified-border:var(--station-border-size) #65b6d3 solid;
+    --modified-opacity: 100%;
+    --modified-z-index: 100;
+}
+
+.allowAutoPlay {
+    width: 100vw;
+    height: 100vh;
+
+    text-align: center;
+    line-height: 100vh;
+    font-size: 5rem;
+}
+
+.station {
+    position: absolute;
+
+    width: var(--station-block-size);
+    height: var(--station-block-size);
+    background-size: cover;
+    background-clip: padding-box;
+    border-radius: 50%;
+
+    border: var(--classic-border);
+    opacity: var(--classic-opacity);
+    z-index: var(--classic-z-index);
+}
+
+.downInfo, .upInfo {
+    position: absolute;
+    width: calc(var(--R-small) * 1.7);
+    height: calc(var(--R-small) * 0.4);
+    left: calc(50vw - var(--R-small) * 0.85);
+    top: calc(50vh - var(--R-small) * 0.2);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.info {
+    font-size: 1.8rem;
+    word-spacing: 0.2rem;
+    color: white;
+
+    height: calc(var(--R-small) * 0.1);
+    width: calc(var(--R-small) * 1.7);
+    text-align: center;
+    line-height: calc(var(--R-small) * 0.1);
+}
+
+.downInfo {
+    z-index: 20;
+    -webkit-text-stroke: 0.3rem black;
+}
+
+.upInfo {
+    z-index: 50;
+}
+
