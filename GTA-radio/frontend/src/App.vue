@@ -13,30 +13,17 @@
     import axios from "axios"
 
     let timers = [];
-    let maxWaitTime = -1;
     const audio = new Audio();
 
-    function newSongName(here, res) {
-        here.currentSong = {
-            name: res.name,
-            author: res.author
-        }
-    }
-
-    function noSongName(here, time, id) {
-        here.currentSong = null;
-        if (maxWaitTime === time) {
-            axios.get("/tracks", {params: {stationId: id}}).then(response => {
-                const result = response.data;
-                maxWaitTime = -1;
-                for (let i = 0; i < result.length; i++) {
-                    const res = result[i];
-                    maxWaitTime = Math.max(maxWaitTime, res.endTime);
-                    timers.push(setTimeout(noSongName, res.endTime, here, res.endTime, id));
-                    timers.push(setTimeout(newSongName, res.startTime, here, res));
-                }
-            });
-        }
+    function newSongName(here, id) {
+        axios.get("/track", {params: {stationId: id, currentTime: audio.currentTime * 1000}}).then(response => {
+            const result = response.data;
+            here.currentSong = {
+                name: result.name,
+                author: result.author
+            };
+            timers.push(setTimeout(newSongName, 5000, here, id));
+        });
     }
 
     export default {
@@ -69,7 +56,6 @@
                     this.currentSong = null;
                     audio.pause();
                     audio.currentTime = 0;
-                    maxWaitTime = -1;
 
                     document.getElementById(newStation.uniqueName).style.setProperty('opacity', 'var(--modified-opacity)');
                     document.getElementById(newStation.uniqueName).style.setProperty('border', 'var(--modified-border)');
@@ -97,7 +83,7 @@
                                 const src = response.data.toString();
                                 const shift = Math.min(Math.random(), 0.6) * 1000 + 500;
                                 const here = this;
-                                axios.get("/tracks", {params: {stationId: newStation.id}}).then(response => {
+                                axios.get("/track", {params: {stationId: newStation.id, currentTime: -1}}).then(response => {
                                     timers.push(setTimeout(function () {
                                         axios.get("/musicStartTime", {params: {stationId: newStation.id}}).then(response => {
                                             if (timers.length > 0) {
@@ -109,12 +95,11 @@
                                             audio.play();
                                         });
                                         const result = response.data;
-                                        for (let i = 0; i < result.length; i++) {
-                                            const res = result[i];
-                                            maxWaitTime = Math.max(maxWaitTime, res.endTime);
-                                            timers.push(setTimeout(noSongName, res.endTime, here, res.endTime, newStation.id));
-                                            timers.push(setTimeout(newSongName, res.startTime, here, res));
-                                        }
+                                        here.currentSong = {
+                                            name: result.name,
+                                            author: result.author
+                                        };
+                                        timers.push(setTimeout(newSongName, 5000, here, newStation.id));
                                     }, shift));
                                 });
                             }

@@ -1,22 +1,21 @@
 package wp.gtavradio.backend.controller;
 
 import org.springframework.web.bind.annotation.*;
+import wp.gtavradio.backend.domain.JustSong;
 import wp.gtavradio.backend.domain.Song;
-import wp.gtavradio.backend.domain.SongTiming;
 import wp.gtavradio.backend.domain.Station;
+import wp.gtavradio.backend.service.SongService;
 import wp.gtavradio.backend.service.StationService;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 public class MusicController {
     final long START_TIME = System.currentTimeMillis();
     private final StationService stationService;
+    private final SongService songService;
 
-    public MusicController(StationService stationService) {
+    public MusicController(StationService stationService, SongService songService) {
         this.stationService = stationService;
+        this.songService = songService;
     }
 
     @GetMapping("/musicSrc")
@@ -40,37 +39,19 @@ public class MusicController {
         return (double) shift / 1000;
     }
 
-    @GetMapping("/tracks")
-    public List<SongTiming> getSongsList(@RequestParam int stationId) {
-        List<SongTiming> timingList = new ArrayList<>();
+    @GetMapping("/track")
+    public JustSong getCurrentSong(@RequestParam int stationId, @RequestParam String currentTime) {
         Station station = stationService.findById(stationId);
-        long trackLen = station.getDuration();
-        long shift = (System.currentTimeMillis() - START_TIME) % trackLen;
-        for (Song song : station.getSongs()) {
-            if (song.getStartTime() > shift) {
-                SongTiming songTiming = getTiming(song, shift);
-                songTiming.setStartTime(song.getStartTime() - shift);
-                timingList.add(songTiming);
-            } else if (song.getEndTime() > shift) {
-                SongTiming songTiming = getTiming(song, shift);
-                songTiming.setStartTime(0);
-                timingList.add(songTiming);
-            } else {
-                SongTiming songTiming = getTiming(song, shift);
-                songTiming.setStartTime(song.getStartTime() + station.getDuration() - shift);
-                songTiming.setEndTime(song.getEndTime() + station.getDuration() - shift);
-                timingList.add(songTiming);
-            }
+        long shift = (System.currentTimeMillis() - START_TIME) % station.getDuration();
+        Song song = songService.getCurrentSong(stationId, currentTime.equals("-1") ? shift : (long) Double.parseDouble(currentTime));
+        JustSong justSong = new JustSong();
+        if (song == null) {
+            justSong.setAuthor("");
+            justSong.setName("");
+        } else {
+            justSong.setAuthor(song.getAuthor());
+            justSong.setName(song.getName());
         }
-        return timingList;
+        return justSong;
     }
-
-    private SongTiming getTiming(Song song, long shift) {
-        SongTiming songTiming = new SongTiming();
-        songTiming.setAuthor(song.getAuthor().toUpperCase());
-        songTiming.setName(song.getName());
-        songTiming.setEndTime(song.getEndTime() - shift);
-        return songTiming;
-    }
-
 }
